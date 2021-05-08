@@ -1,0 +1,5 @@
+python3 resize_image.py \
+--input_dir "/home/dataset/final/" \
+--image_prefix "FImg_ID_" \
+--image_size 80 \
+--output_dir "/home/dataset/preprocessed_80" 
