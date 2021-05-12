@@ -14,7 +14,6 @@ from torch.utils.tensorboard import SummaryWriter
 from resources.data_utils_pt import split_dataset, CustomDataset
 from torch.utils.data import DataLoader
 from resources.model_utils_pt import Model
-#from resources.savers import TrainingSaver
 from resources.utils import label_str_to_dec
 
 # *** Setting global constants ***
@@ -38,7 +37,7 @@ ds = ds_dict.get(rank) # training dataset size
 path_hp = dataset+'/'+str(ds)+'pytorch/' # directory where training details are saved
 if not os.path.exists(path_hp):
     os.makedirs(path_hp)
-save_path = path_hp + "model.pt"
+save_path = path_hp + "model_2.pt"
 
 # *** Load data ***
 # labels
@@ -137,6 +136,7 @@ def fwd_pass(X, y, train = False):
 
     # compare y and model outputs for accuracy
     outputs = model(X)
+
     matches = [torch.argmax(i) == j for i, j in zip(outputs, y)]
     acc = matches.count(True)/len(matches)
     loss = criterion(outputs, y)
