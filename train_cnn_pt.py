@@ -10,6 +10,7 @@ import random
 import os
 import sys
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import StepLR
 
 from resources.data_utils_pt import split_dataset, CustomDataset
 from torch.utils.data import DataLoader
@@ -37,7 +38,8 @@ ds = ds_dict.get(rank) # training dataset size
 path_hp = dataset+'/'+str(ds)+'pytorch/' # directory where training details are saved
 if not os.path.exists(path_hp):
     os.makedirs(path_hp)
-save_path = path_hp + "model_2.pt"
+run_num = 4
+save_path = path_hp + f"model_{run_num}.pt"
 
 # *** Load data ***
 # labels
@@ -55,13 +57,6 @@ images_str = [f"{path_final}{image_prefix}{img_idx}{image_suffix}" for img_idx i
 main_dataset = pd.DataFrame({"img_path": images_str, "label": main_labels})
 
 # *** Training ***
-'''
-generation_params = {"dim": image_dimension,
-                     "nb_classes": num_classes,
-                     "column_img": "img_path",
-                     "column_label": "label",
-                    }
-'''
 
 # hyperparameters
 epochs = 500
@@ -69,31 +64,14 @@ min_delta = 0.0000001
 patience = 20
 monitor = 'val_loss'
 mode = 'min' # stop when monitor metric stops decreasing
-'''
-early_stopping_loss = EarlyStopping(monitor=monitor,
-                                    min_delta=min_delta,
-                                    patience=patience,
-                                    verbose=0,
-                                    mode='auto',
-                                    baseline=None,
-                                    restore_best_weights=True
-                                   )
 
-early_stop_callback = EarlyStopping(
-   monitor=monitor,
-   min_delta=min_delta,
-   patience=patience,
-   verbose=0,
-   mode='min'
-)
-trainer = Trainer(callbacks=[early_stop_callback])
-'''
 batch_size_list = [4,8,16,27,32]
 batch_size = batch_size_list[0]
 lr = 0.001
 optimizer_name = 'Adam'
 seed = 25 # seed for random initialization
-
+scheduler_name = 'StepLR'
+step_size=30
 # *** Train ***
 
 
@@ -103,7 +81,7 @@ model = Model()
 # optimizer
 optimizer = optim.Adam(model.parameters(), lr=lr)
 criterion = nn.CrossEntropyLoss()
-
+scheduler = StepLR(optimizer, step_size = step_size)
 
 # Split data set
 df_train, df_valid, df_test = split_dataset(data_frame=main_dataset,
@@ -119,13 +97,14 @@ test_loader = DataLoader(CustomDataset(df_test), batch_size=100, shuffle=False)
 
 
 # save hyperparameters
-hp_filename = path_hp + "hp_details.txt"
+hp_filename = path_hp + f"hp_details_{run_num}.txt"
 with open(hp_filename,"w") as f:
     f.write('Dataset: %s \n' % (dataset))
     f.write('Batch size: %i \n' % (batch_size))
     f.write('Initialization random seed: %i \n' % (seed))
     f.write('Training epochs: %i \n' % (epochs))
     f.write('Optimizer: %s (lr = %f) \n' % (optimizer_name, lr))
+    f.write(f'LR Scheduler: {scheduler_name} (step size = {step_size})\n')
     f.write('Early Stopping: %s (min_delta = %.9f, patience = %i) \n' % (monitor, min_delta, patience))
 
 
@@ -138,32 +117,21 @@ def fwd_pass(X, y, train = False):
     outputs = model(X)
 
     matches = [torch.argmax(i) == j for i, j in zip(outputs, y)]
-    acc = matches.count(True)/len(matches)
+    acc = float(matches.count(True))/len(matches)
     loss = criterion(outputs, y)
-
     if train:
         loss.backward()
         optimizer.step()
     return acc, loss
 
 
-def test():
-    X,y = valid_loader
-
-
-# Early stopping
+# Early stopping parameters
 min_epochs = 10
 early_stop = False
 min_val_loss = np.Inf
 
-# Track training
+# Track training via Tensorboard
 writer = SummaryWriter()
-
-val_acc_history = []
-val_loss_history = []
-
-train_acc_history = []
-train_loss_history = []
 
 for epoch in range(epochs):
 
@@ -184,9 +152,10 @@ for epoch in range(epochs):
         epoch_training_loss.append(loss.item())
         epoch_training_accuracy.append(acc)
 
-        # print statistics
         running_loss += loss.item()
-        if i % 1000 == 999:    # print every 1000 batches
+
+        # print statistics every 1000 batches
+        if i % 1000 == 999:
             print(f'[Epoch %d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 1000))
             running_loss = 0.0
@@ -208,9 +177,6 @@ for epoch in range(epochs):
     curr_val_loss = np.mean(epoch_val_loss)
     writer.add_scalar("Loss/validation", curr_val_loss, epoch)
     writer.add_scalar("Accuracy/validation", np.mean(epoch_val_accuracy), epoch)
-    #val_loss_history.append(avg_val_loss)
-    #train_acc_history.append(acc)
-    #train_loss_history.append(loss)
 
     # Implement early stopping if validation loss is not improving
     if curr_val_loss < min_val_loss:
@@ -226,6 +192,7 @@ for epoch in range(epochs):
         early_stop = True
         break
     else:
+        scheduler.step()
         continue
     break
 
@@ -234,7 +201,7 @@ writer.flush()
 print('Finished Training')
 
 
-# *** Save training results ***
+# *** Save training statistics ***
 '''
 experiment_saver = TrainingSaver(path_out=path_hp,
                                  stopped_epoch=stopped_epoch,
