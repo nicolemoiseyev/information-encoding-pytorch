@@ -30,7 +30,7 @@ rank = 1 # change to choose training data set size
 ds = ds_dict.get(rank) # training dataset size
 
 path_hp = dataset+'/'+str(ds)+'pytorch/' # directory where training details are saved
-save_path = path_hp + "model.pt"
+save_path = path_hp + "model_4.pt"
 
 # *** Load data ***
 # labels
@@ -71,7 +71,7 @@ test_loader = DataLoader(CustomDataset(df_test), batch_size=100, shuffle=False)
 
 # Evaluate model on test data
 test_acc = []
-for X, y in valid_loader:
+for X, y in test_loader:
     if torch.cuda.is_available():
         X, y = X.cuda(), y.cuda()
     with torch.no_grad():
