@@ -1,5 +1,6 @@
 # information-encoding-pytorch
 
+```
 
 ML model directory structure:
 
@@ -36,3 +37,5 @@ ML model directory structure:
 │   ├── test_cnn_cropped.py
 │   └── train_cnn_pt.py
 └── README.md
+
+```
