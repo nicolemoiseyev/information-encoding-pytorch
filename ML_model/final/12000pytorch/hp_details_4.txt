@@ -1,0 +1,7 @@
+Dataset: final
+Batch size: 4
+Initialization random seed: 25
+Training epochs: 500
+Optimizer: Adam (lr = 0.001000)
+LR Scheduler: StepLR (step size = 30)
+Early Stopping: val_loss (min_delta = 0.000000100, patience = 20)
