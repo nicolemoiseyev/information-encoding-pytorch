@@ -3,7 +3,8 @@ from typing import List, Tuple, Union, Dict
 import numpy as np
 import pandas as pd
 from PIL import Image
-
+import os
+import csv
 
 def img_resize(in_path: str, out_path: str, image_size: int) -> None:
     """ Reads an image from `in_path`, resizes it, and saves it at `out_path`"""
@@ -56,3 +57,23 @@ def aggregate_generator_labels(data_generator) -> np.ndarray:
         output.extend(batch[1])
     output = np.asarray(output, dtype="int8")
     return output
+
+def txt_labels_to_csv(labels_dir):
+    '''
+     Combine txt labels to a single csv file
+     returns the csv filename and IDs of the labels in the order they appear in the final csv
+    '''
+    output = labels_dir.split("plaintext")[0] + "labels.csv"
+    ids = []
+    with open(output, 'w') as outfile:
+        csvout = csv.writer(outfile)
+        files = os.listdir(labels_dir)
+        files.sort(key=lambda f: int("".join(filter(str.isdigit, f)))) # sort files in ascending numerical order
+        for filename in files: # filename format: Plaintext_ID_1.txt
+            with open(labels_dir + '/' + filename) as afile:
+                csvout.writerow([afile.read()])
+                afile.close()
+                id = filename.split("Plaintext_ID_")[1].split(".")[0]
+                ids.append(id)
+        outfile.close()
+    return output, ids

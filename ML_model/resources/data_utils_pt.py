@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from PIL import Image
+#from PIL import Image
 from torchvision import transforms
 
 import torch
@@ -10,7 +10,8 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
 import pandas as pd
 import os
-from PIL import Image
+import cv2
+#from PIL import Image
 import torch
 
 class CustomDataset(Dataset):
@@ -29,7 +30,7 @@ class CustomDataset(Dataset):
         sample = self.data_frame.iloc[index]
         image_path = sample[self.column_img]
 
-        img = Image.open(image_path)
+        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         img = transforms.ToTensor()(img)
         img = img.view(1, 80, 80)
         y_label = torch.tensor((sample[self.column_label]))

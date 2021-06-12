@@ -1,6 +1,9 @@
-final/
-noise_medium_3/
 runs/
 resources/__pycache__
 cropped_datasets/
 __pycache__
+Plaintext*.txt
+FImg*.jpg
+IImg*.jpg
+Noise*.txt
+labels*.csv

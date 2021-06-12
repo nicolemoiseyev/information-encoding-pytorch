@@ -15,7 +15,7 @@ from torch.optim.lr_scheduler import StepLR
 from resources.data_utils_pt import split_dataset, CustomDataset
 from torch.utils.data import DataLoader
 from resources.model_utils_pt import Model
-from resources.utils import label_str_to_dec
+from resources.utils import label_str_to_dec, txt_labels_to_csv
 
 # *** Setting global constants ***
 num_classes = 15 # to change according to the dictionary size
@@ -25,9 +25,18 @@ num_replicates = 1000
 dataset_size = num_classes * num_replicates
 image_dimension = (80, 80)
 
+'''
 dataset = 'final' # name of the data set
 path_final = 'noise_medium_3/preprocessed_80/' # preprocessed images directory
 filename = 'noise_medium_3/labels_spot_binary.csv' # label file path
+img_ids  =  range(1, dataset_size + 1)
+'''
+
+dataset = 'python_dataset' # name of the data set
+path_final = 'python_dataset/preprocessed_80/' # preprocessed images directory
+labels_dir = dataset + "/plaintext" # txt labels directory
+labels_csv, img_ids = txt_labels_to_csv(labels_dir)
+filename = labels_csv # label file path
 
 # for spliting data set
 ds_list = [0, 0.5, 0.75, 0.875, 0.9375, 0.96875, 0.9875, 0.9975]
@@ -38,7 +47,7 @@ ds = ds_dict.get(rank) # training dataset size
 path_hp = dataset+'/'+str(ds)+'pytorch/' # directory where training details are saved
 if not os.path.exists(path_hp):
     os.makedirs(path_hp)
-run_num = 4
+run_num = 1
 save_path = path_hp + f"model_{run_num}.pt"
 
 # *** Load data ***
