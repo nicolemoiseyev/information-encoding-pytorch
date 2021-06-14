@@ -19,9 +19,10 @@ num_replicates = 1000
 dataset_size = num_classes * num_replicates
 image_dimension = (80, 80)
 
-dataset = 'final' # name of the data set
-path_final = 'noise_medium_3/preprocessed_80/' # preprocessed images directory
-filename = 'noise_medium_3/labels_spot_binary.csv' # label file path
+dataset = 'spacing_10_GN_1_python' # name of the data set
+path_final = dataset + '/preprocessed_80/' # preprocessed images directory
+labels_dir = dataset + "/plaintext" # txt labels directory
+filename = dataset + "/labels.csv" # label file path
 
 # for spliting data set
 ds_list = [0, 0.5, 0.75, 0.875, 0.9375, 0.96875, 0.9875, 0.9975]
@@ -29,8 +30,9 @@ ds_dict = {i+1:round((1-j)*dataset_size*0.8) for i,j in enumerate(ds_list)}
 rank = 1 # change to choose training data set size
 ds = ds_dict.get(rank) # training dataset size
 
-path_hp = dataset+'/'+str(ds)+'pytorch/' # directory where training details are saved
-save_path = path_hp + "model_4.pt"
+model_dataset = 'spacing_10_GN_1_matlab' # dataset used to train the model to be tested here
+path_hp = model_dataset+'/'+str(ds)+'pytorch/' # directory where training details are saved
+save_path = path_hp + "model_1.pt"
 
 # *** Load data ***
 # labels
@@ -69,17 +71,17 @@ train_loader = DataLoader(CustomDataset(df_train), batch_size=batch_size, shuffl
 valid_loader = DataLoader(CustomDataset(df_valid), batch_size=100, shuffle=False)
 test_loader = DataLoader(CustomDataset(df_test), batch_size=100, shuffle=False)
 
-# Evaluate model on test data
-test_acc = []
-for X, y in test_loader:
+# Evaluate model on validation data
+valid_acc = []
+for X, y in valid_loader:
     if torch.cuda.is_available():
         X, y = X.cuda(), y.cuda()
     with torch.no_grad():
         outputs = model(X)
         matches = [torch.argmax(i) == j for i, j in zip(outputs, y)]
         acc = matches.count(True)/len(matches)
-        test_acc.append(acc)
-test_acc = np.round(np.mean(test_acc) * 100, 3)
+        valid_acc.append(acc)
+valid_acc = np.round(np.mean(valid_acc) * 100, 3)
 
 # Report accuracy
-print(f'Accuracy of the network on {df_test.shape[0]} test images: {test_acc}%')
+print(f'Accuracy of the network on {df_valid.shape[0]} test images: {valid_acc}%')

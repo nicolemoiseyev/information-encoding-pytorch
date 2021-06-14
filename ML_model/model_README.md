@@ -9,6 +9,7 @@ python train_cnn_pt.py
 
 To monitor training, run the following in a new shell window (make sure you have tensorboard installed):
 
+cd information-encoding-pytorch/ML_model
 tensorboard --logdir=runs
 
 and select the appropriate metrics from your current run to monitor.

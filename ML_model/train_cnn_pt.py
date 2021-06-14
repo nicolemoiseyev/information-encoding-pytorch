@@ -32,9 +32,11 @@ filename = 'noise_medium_3/labels_spot_binary.csv' # label file path
 img_ids  =  range(1, dataset_size + 1)
 '''
 
-dataset = 'python_dataset' # name of the data set
-path_final = 'python_dataset/preprocessed_80/' # preprocessed images directory
+dataset = 'spacing_10_GN_1_python' # name of the data set, change if changing dataset
+
+path_final = dataset + '/preprocessed_80/' # preprocessed images directory
 labels_dir = dataset + "/plaintext" # txt labels directory
+#filename = dataset + 'labels.csv' # label file path; use if labels.csv exists already in this dataset directory
 labels_csv, img_ids = txt_labels_to_csv(labels_dir)
 filename = labels_csv # label file path
 
@@ -47,7 +49,7 @@ ds = ds_dict.get(rank) # training dataset size
 path_hp = dataset+'/'+str(ds)+'pytorch/' # directory where training details are saved
 if not os.path.exists(path_hp):
     os.makedirs(path_hp)
-run_num = 1
+run_num = 1 # CHANGE IF RETRAINING ON SAME DATASET
 save_path = path_hp + f"model_{run_num}.pt"
 
 # *** Load data ***
@@ -128,6 +130,7 @@ def fwd_pass(X, y, train = False):
     matches = [torch.argmax(i) == j for i, j in zip(outputs, y)]
     acc = float(matches.count(True))/len(matches)
     loss = criterion(outputs, y)
+
     if train:
         loss.backward()
         optimizer.step()
